@@ -34,18 +34,21 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Disable Next.js Type Errors
+      - name: Create Next Config
         run: |
           cat > next.config.js << 'EOF'
           /** @type {import('next').NextConfig} */
           const nextConfig = {
+            output: 'export',
+
             typescript: {
               ignoreBuildErrors: true,
             },
+
             eslint: {
               ignoreDuringBuilds: true,
             },
-            output: 'export',
+
             images: {
               unoptimized: true,
             },
@@ -57,13 +60,23 @@ jobs:
       - name: Build Next.js App
         run: npm run build
 
-      - name: Export Static Files
-        run: npx next export
+      - name: Prepare Static Output
+        run: |
+          mkdir -p out
+
+          cp -r .next/static out/static || true
+
+          cp -r public/* out/ || true
 
       - name: Install Capacitor 6
         run: |
           npm uninstall @capacitor/core @capacitor/cli @capacitor/android || true
-          npm install @capacitor/core@6.1.2 @capacitor/cli@6.1.2 @capacitor/android@6.1.2 --legacy-peer-deps
+
+          npm install \
+            @capacitor/core@6.1.2 \
+            @capacitor/cli@6.1.2 \
+            @capacitor/android@6.1.2 \
+            --legacy-peer-deps
 
       - name: Initialize Capacitor
         run: |
